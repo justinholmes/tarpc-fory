@@ -5,19 +5,16 @@
 //! letting you depend on a single stable crate name without manually pinning
 //! a fork branch or flipping feature flags on tarpc directly.
 //!
-//! # Status: experimental, partial integration
+//! # Status
 //!
-//! - Wire codec + wrapper envelopes + lower-level transport API: works, tested.
-//! - `#[tarpc::service]` proc-macro flow: NOT supported. Generated request/
-//!   response types derive `serde::{Serialize, Deserialize}` but not
-//!   `fory::ForyObject`, so the `client::Stub` / `server::BaseChannel`
-//!   machinery cannot use this transport.
+//! Wire codec, wrapper envelopes, lower-level transport API, and the canonical
+//! `#[tarpc::service]` proc-macro flow all work and are tested. Envelope types
+//! use hand-written `fory::Serializer` impls registered via
+//! `fory.register_serializer(id)` (EXT path), which sidesteps the fory-derive
+//! `TYPE_ID_COUNTER` collision with user-derived types. User types use
+//! `#[derive(fory::ForyObject)]` normally — no per-type rewrite required.
 //!
-//! Full integration requires upstream apache/fory work (serde compatibility
-//! layer). Until that lands, this crate is suitable only for use cases
-//! that go through the lower-level `Sink + Stream` transport directly.
-//!
-//! See README.md for details.
+//! See README.md for the full guide and a `#[tarpc::service]` example.
 //!
 //! # Quick start
 //!

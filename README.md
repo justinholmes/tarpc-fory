@@ -18,49 +18,90 @@ Fory is a high-performance, cross-language binary serialization format from the 
 
 tarpc's native envelope types (`ClientMessage<T>`, `Response<T>`, `Request<T>`, `ServerError`) reference stdlib types (`Result<T, E>`, `Instant`, `io::ErrorKind`) that Fory does not provide built-in `Serializer` impls for. To bridge the gap, this crate ships parallel Fory-friendly wrapper types (`ForyClientMessage<T>`, `ForyResponse<T>`, etc.) and a codec adapter (`ForyEnvelopeCodec`) that converts at the wire boundary. From the user's perspective the wrappers are invisible — `tarpc_fory::connect` and `tarpc_fory::listen` accept native `tarpc` types, encode them as Fory bytes, and reverse on receive.
 
+## Status
+
+**Working as of commit 5ae0738 (tarpc fork) / 203b4bf (tarpc-fory):**
+- Wire codec — encodes/decodes Apache Fory bytes via `tokio-serde`
+- Wrapper envelope types (`ForyClientMessage<T>`, `ForyResponse<T>`, etc.) — round-trip through fory and across TCP
+- Lower-level `Sink + Stream` transport API with manual `ClientMessage<T>` / `Response<T>`
+- **Canonical `#[tarpc::service]` flow over fory TCP** — define a service trait, run server + client over fory transport, RPC end-to-end
+
+The wrapper envelope types use hand-written `fory::Serializer` impls registered via `fory.register_serializer(id)`, avoiding fory-derive's compile-time `TYPE_ID_COUNTER` (which would otherwise collide with user-derived types from `#[tarpc::service]`-generated request/response payloads). User application types continue to use `#[derive(fory::ForyObject)]` normally — there's no per-user-type rewrite.
+
+29 integration tests on this crate + 3 end-to-end service tests on the underlying tarpc fork — all passing on TCP localhost.
+
 ## Quick start
 
 ```rust,ignore
-use fory::{Fory, ForyObject};
+use fory::Fory;
 use std::sync::Arc;
-use tarpc_fory::{
-    ForyClientMessage, ForyRequest, ForyResponse, ForyResult,
-    ForyServerError, ForyTraceContext,
-};
+use tarpc::{client, context, server::{self, Channel}};
+use tarpc::serde_transport::fory as fory_transport;
+use tarpc::serde_transport::fory_envelope::register_envelope_types;
+use futures::StreamExt as _;
 
-// 1. Build a fory registry. Register the wrapper envelopes and your inner T.
-let mut fory = Fory::default();
-fory.register::<ForyTraceContext>(2).unwrap();
-fory.register::<ForyServerError>(3).unwrap();
-fory.register::<ForyResult<String>>(4).unwrap();
-fory.register::<ForyRequest<String>>(5).unwrap();
-fory.register::<ForyResponse<String>>(6).unwrap();
-fory.register::<ForyClientMessage<String>>(7).unwrap();
-let fory = Arc::new(fory);
+// The `derive` list keeps serde happy for tarpc internals;
+// the fory feature on the tarpc fork emits #[derive(fory::ForyObject)] too.
+#[tarpc::service(derive = [Clone, serde::Serialize, serde::Deserialize])]
+trait Hello {
+    async fn hello(name: String) -> String;
+}
 
-// 2. Connect / listen.
-let transport = tarpc_fory::connect::<_, String, String>("127.0.0.1:8080", fory.clone()).await?;
-let listener = tarpc_fory::listen::<_, String, String>("127.0.0.1:0", fory).await?;
+#[derive(Clone)]
+struct HelloServer;
+
+impl Hello for HelloServer {
+    async fn hello(self, _: context::Context, name: String) -> String {
+        format!("hello, {}", name)
+    }
+}
+
+async fn run() -> std::io::Result<()> {
+    let mut fory = Fory::default();
+
+    // Envelope types use register_serializer (EXT path — never touches
+    // fory_type_index, so no collision with user types at index 0).
+    use tarpc::serde_transport::fory_envelope::{
+        ForyClientMessage, ForyRequest, ForyResponse, ForyResult,
+        ForyServerError, ForyTraceContext,
+    };
+    fory.register_serializer::<ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<ForyServerError>(3).unwrap();
+    fory.register_serializer::<ForyResult<HelloRequest>>(4).unwrap();
+    fory.register_serializer::<ForyRequest<HelloRequest>>(5).unwrap();
+    fory.register_serializer::<ForyClientMessage<HelloRequest>>(7).unwrap();
+    fory.register_serializer::<ForyResult<HelloResponse>>(8).unwrap();
+    fory.register_serializer::<ForyResponse<HelloResponse>>(6).unwrap();
+
+    // User types use register (STRUCT path).
+    fory.register::<HelloRequest>(100).unwrap();
+    fory.register::<HelloResponse>(101).unwrap();
+
+    let fory = Arc::new(fory);
+
+    // Server
+    let mut listener = fory_transport::listen::<_, HelloRequest, HelloResponse>(
+        "127.0.0.1:0", fory.clone()).await?;
+    let addr = listener.local_addr();
+    tokio::spawn(async move {
+        while let Some(Ok(transport)) = listener.next().await {
+            let channel = tarpc::server::BaseChannel::with_defaults(transport);
+            tokio::spawn(
+                channel.execute(HelloServer.serve())
+                    .for_each(|fut| async move { tokio::spawn(fut); })
+            );
+        }
+    });
+
+    // Client
+    let transport = fory_transport::connect::<_, HelloRequest, HelloResponse>(
+        addr, fory).await?;
+    let client = HelloClient::new(client::Config::default(), transport).spawn();
+    let resp = client.hello(context::current(), "world".into()).await?;
+    assert_eq!(resp, "hello, world");
+    Ok(())
+}
 ```
-
-The inner `T` (here `String`) must implement `fory::Serializer + fory::ForyDefault + 'static`. Fory ships built-in impls for primitives, `String`, `Vec<T>`, `Option<T>`, `HashMap<K, V>`, etc. For your own types, derive `ForyObject` and register them.
-
-## Status: experimental, partial integration
-
-**What works (tested):**
-- Wire codec — encodes/decodes Apache Fory bytes via `tokio-serde`
-- Wrapper envelope types (`ForyClientMessage<T>`, `ForyResponse<T>`, etc.) — round-trip through `Fory::serialize`/`deserialize` and across TCP
-- Lower-level `Sink + Stream` transport API — manual `ClientMessage<T>` / `Response<T>` over a TCP connection works correctly for any `T: fory::Serializer + fory::ForyDefault + 'static`
-- Multiplexing, large payloads, error responses, cancel, multi-client, full `io::ErrorKind` mapping (29 integration tests, all green)
-
-**What does not yet work:**
-- The canonical `#[tarpc::service]` proc-macro flow: the generated request/response types derive `serde::{Serialize, Deserialize}` but NOT `fory::ForyObject`, so the high-level `client::Stub` / `server::BaseChannel` machinery cannot use this transport. **You cannot define a service trait with `#[tarpc::service]` and run it over fory yet.**
-
-**Why:** Apache Fory 0.17's serializer trait (`fory::Serializer`) is incompatible with `serde::Serialize` — there is no built-in adapter, and `Result<T, E>`, `std::time::Instant`, and `std::io::ErrorKind` lack `fory::Serializer` impls in fory-core. Wrapper types in this crate paper over the second issue but cannot fix the first; the proc-macro-generated types are out of our reach.
-
-**Path to full integration:** add a serde compatibility layer in `apache/fory` (blanket `impl<T: serde::Serialize> fory::Serializer for T` and stdlib type impls) so any `serde`-deriving type works as a Fory payload. That contribution is being scoped separately; until it lands and ships in a fory release, this crate is not a drop-in `#[tarpc::service]` codec.
-
-If your use case fits the lower-level transport API (you control your own message types and don't need the service macro), this crate works today. If you want `#[tarpc::service]` over fory, wait.
 
 ## Testing
 
