@@ -45,11 +45,22 @@ let listener = tarpc_fory::listen::<_, String, String>("127.0.0.1:0", fory).awai
 
 The inner `T` (here `String`) must implement `fory::Serializer + fory::ForyDefault + 'static`. Fory ships built-in impls for primitives, `String`, `Vec<T>`, `Option<T>`, `HashMap<K, V>`, etc. For your own types, derive `ForyObject` and register them.
 
-## Status & limitations
+## Status: experimental, partial integration
 
-- **Type registration is required.** Both ends of the wire must register the same types with the same numeric IDs.
-- **Generic `tarpc::service` integration is incomplete.** The proc-macro-generated `XxxRequest` / `XxxResponse` types do not auto-derive `ForyObject`, so the high-level `client::Stub` machinery does not currently work end-to-end. Use the lower-level `Sink + Stream` transport API directly (see [`tests/transport.rs`](tests/transport.rs)) — round-tripping `ClientMessage<T>` / `Response<T>` works for any `T: ForyObject + ForyDefault`. Auto-derive integration with `#[tarpc::service]` is tracked as future work.
-- **Deadline encoding is relative.** Native `tarpc::context::Context::deadline` (an `Instant`) is encoded as nanoseconds-remaining and re-anchored at decode time. Drift between sender and receiver clocks is bounded by the transit time.
+**What works (tested):**
+- Wire codec — encodes/decodes Apache Fory bytes via `tokio-serde`
+- Wrapper envelope types (`ForyClientMessage<T>`, `ForyResponse<T>`, etc.) — round-trip through `Fory::serialize`/`deserialize` and across TCP
+- Lower-level `Sink + Stream` transport API — manual `ClientMessage<T>` / `Response<T>` over a TCP connection works correctly for any `T: fory::Serializer + fory::ForyDefault + 'static`
+- Multiplexing, large payloads, error responses, cancel, multi-client, full `io::ErrorKind` mapping (29 integration tests, all green)
+
+**What does not yet work:**
+- The canonical `#[tarpc::service]` proc-macro flow: the generated request/response types derive `serde::{Serialize, Deserialize}` but NOT `fory::ForyObject`, so the high-level `client::Stub` / `server::BaseChannel` machinery cannot use this transport. **You cannot define a service trait with `#[tarpc::service]` and run it over fory yet.**
+
+**Why:** Apache Fory 0.17's serializer trait (`fory::Serializer`) is incompatible with `serde::Serialize` — there is no built-in adapter, and `Result<T, E>`, `std::time::Instant`, and `std::io::ErrorKind` lack `fory::Serializer` impls in fory-core. Wrapper types in this crate paper over the second issue but cannot fix the first; the proc-macro-generated types are out of our reach.
+
+**Path to full integration:** add a serde compatibility layer in `apache/fory` (blanket `impl<T: serde::Serialize> fory::Serializer for T` and stdlib type impls) so any `serde`-deriving type works as a Fory payload. That contribution is being scoped separately; until it lands and ships in a fory release, this crate is not a drop-in `#[tarpc::service]` codec.
+
+If your use case fits the lower-level transport API (you control your own message types and don't need the service macro), this crate works today. If you want `#[tarpc::service]` over fory, wait.
 
 ## Testing
 

@@ -5,11 +5,19 @@
 //! letting you depend on a single stable crate name without manually pinning
 //! a fork branch or flipping feature flags on tarpc directly.
 //!
-//! # Status
+//! # Status: experimental, partial integration
 //!
-//! Currently depends on a fork of `google/tarpc` while the upstream PR adding
-//! the `fory` feature is in flight. Once merged and released, `tarpc-fory`
-//! will repoint at the published `tarpc` version.
+//! - Wire codec + wrapper envelopes + lower-level transport API: works, tested.
+//! - `#[tarpc::service]` proc-macro flow: NOT supported. Generated request/
+//!   response types derive `serde::{Serialize, Deserialize}` but not
+//!   `fory::ForyObject`, so the `client::Stub` / `server::BaseChannel`
+//!   machinery cannot use this transport.
+//!
+//! Full integration requires upstream apache/fory work (serde compatibility
+//! layer). Until that lands, this crate is suitable only for use cases
+//! that go through the lower-level `Sink + Stream` transport directly.
+//!
+//! See README.md for details.
 //!
 //! # Quick start
 //!
