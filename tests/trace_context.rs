@@ -19,12 +19,12 @@ use tarpc_fory::{
 
 fn make_fory() -> Arc<Fory> {
     let mut fory = Fory::default();
-    fory.register::<ForyTraceContext>(2).unwrap();
-    fory.register::<ForyServerError>(3).unwrap();
-    fory.register::<ForyResult<u32>>(4).unwrap();
-    fory.register::<ForyRequest<u32>>(5).unwrap();
-    fory.register::<ForyResponse<u32>>(6).unwrap();
-    fory.register::<ForyClientMessage<u32>>(7).unwrap();
+    fory.register_serializer::<ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<ForyServerError>(3).unwrap();
+    fory.register_serializer::<ForyResult<u32>>(4).unwrap();
+    fory.register_serializer::<ForyRequest<u32>>(5).unwrap();
+    fory.register_serializer::<ForyResponse<u32>>(6).unwrap();
+    fory.register_serializer::<ForyClientMessage<u32>>(7).unwrap();
     Arc::new(fory)
 }
 
@@ -162,7 +162,7 @@ async fn trace_context_unsampled_preserves_ids() {
 #[test]
 fn fory_trace_context_full_u128_round_trip() {
     let mut fory = Fory::default();
-    fory.register::<ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<ForyTraceContext>(2).unwrap();
 
     let original = ForyTraceContext {
         trace_id: 0x1234_5678_9abc_def0_fedc_ba98_7654_3210_u128,
@@ -182,7 +182,7 @@ fn fory_trace_context_full_u128_round_trip() {
 #[test]
 fn fory_trace_context_unsampled_round_trip() {
     let mut fory = Fory::default();
-    fory.register::<ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<ForyTraceContext>(2).unwrap();
 
     let original = ForyTraceContext {
         trace_id: 0xFEDC_BA98_7654_3210_1234_5678_9ABC_DEF0_u128,

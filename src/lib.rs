@@ -26,12 +26,10 @@
 //! use std::sync::Arc;
 //!
 //! let mut fory = Fory::default();
-//! fory.register::<tarpc_fory::ForyTraceContext>(2).unwrap();
-//! fory.register::<tarpc_fory::ForyServerError>(3).unwrap();
-//! fory.register::<tarpc_fory::ForyResult<String>>(4).unwrap();
-//! fory.register::<tarpc_fory::ForyRequest<String>>(5).unwrap();
-//! fory.register::<tarpc_fory::ForyResponse<String>>(6).unwrap();
-//! fory.register::<tarpc_fory::ForyClientMessage<String>>(7).unwrap();
+//! // Use register_envelope_types to register all envelope types at once.
+//! // This registers via register_serializer (EXT type path) which avoids the
+//! // fory-derive TYPE_ID_COUNTER collision between independently compiled crates.
+//! tarpc_fory::register_envelope_types::<String>(&mut fory).unwrap();
 //! let fory = Arc::new(fory);
 //!
 //! # async fn ex(addr: std::net::SocketAddr) -> std::io::Result<()> {
@@ -45,6 +43,6 @@
 pub use tarpc::serde_transport::fory::{connect, listen, Incoming, ForyEnvelopeCodec};
 pub use tarpc::serde_transport::fory_envelope::{
     ForyClientMessage, ForyRequest, ForyResponse, ForyServerError,
-    ForyResult, ForyTraceContext,
+    ForyResult, ForyTraceContext, register_envelope_types,
 };
 pub use tokio_serde_fory::ForyCodec;

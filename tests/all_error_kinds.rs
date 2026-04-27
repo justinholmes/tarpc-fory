@@ -16,7 +16,7 @@ use tarpc_fory::ForyServerError;
 
 fn make_fory() -> Fory {
     let mut fory = Fory::default();
-    fory.register::<ForyServerError>(3).unwrap();
+    fory.register_serializer::<ForyServerError>(3).unwrap();
     fory
 }
 

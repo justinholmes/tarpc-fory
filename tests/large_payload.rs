@@ -7,12 +7,12 @@ use tarpc::{context, ClientMessage, Request, Response};
 fn build_fory() -> Arc<Fory> {
     let mut fory = Fory::default();
     // Vec<u8> is a fory builtin (Vec is a builtin container; u8 is primitive)
-    fory.register::<tarpc_fory::ForyTraceContext>(2).unwrap();
-    fory.register::<tarpc_fory::ForyServerError>(3).unwrap();
-    fory.register::<tarpc_fory::ForyResult<Vec<u8>>>(4).unwrap();
-    fory.register::<tarpc_fory::ForyRequest<Vec<u8>>>(5).unwrap();
-    fory.register::<tarpc_fory::ForyResponse<Vec<u8>>>(6).unwrap();
-    fory.register::<tarpc_fory::ForyClientMessage<Vec<u8>>>(7).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyServerError>(3).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyResult<Vec<u8>>>(4).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyRequest<Vec<u8>>>(5).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyResponse<Vec<u8>>>(6).unwrap();
+    fory.register_serializer::<tarpc_fory::ForyClientMessage<Vec<u8>>>(7).unwrap();
     Arc::new(fory)
 }
 

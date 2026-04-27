@@ -19,12 +19,12 @@ use tarpc_fory::{
 
 fn make_fory() -> Arc<Fory> {
     let mut fory = Fory::default();
-    fory.register::<ForyTraceContext>(2).unwrap();
-    fory.register::<ForyServerError>(3).unwrap();
-    fory.register::<ForyResult<String>>(4).unwrap();
-    fory.register::<ForyRequest<String>>(5).unwrap();
-    fory.register::<ForyResponse<String>>(6).unwrap();
-    fory.register::<ForyClientMessage<String>>(7).unwrap();
+    fory.register_serializer::<ForyTraceContext>(2).unwrap();
+    fory.register_serializer::<ForyServerError>(3).unwrap();
+    fory.register_serializer::<ForyResult<String>>(4).unwrap();
+    fory.register_serializer::<ForyRequest<String>>(5).unwrap();
+    fory.register_serializer::<ForyResponse<String>>(6).unwrap();
+    fory.register_serializer::<ForyClientMessage<String>>(7).unwrap();
     Arc::new(fory)
 }
 
