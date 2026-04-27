@@ -36,7 +36,7 @@ async fn server_drops_after_read_client_gets_eof() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     // Signal: server has read the request and is about to drop.
@@ -53,7 +53,7 @@ async fn server_drops_after_read_client_gets_eof() {
         }
     });
 
-    let mut client_transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut client_transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 
@@ -101,7 +101,7 @@ async fn client_drops_server_detects_disconnect() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     // Channel to signal that the client has dropped.
@@ -136,7 +136,7 @@ async fn client_drops_server_detects_disconnect() {
         }
     });
 
-    let mut client_transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut client_transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 

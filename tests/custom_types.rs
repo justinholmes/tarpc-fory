@@ -195,7 +195,7 @@ async fn custom_struct_data_via_string_transport() {
     let fory = make_transport_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     tokio::spawn(async move {
@@ -214,7 +214,7 @@ async fn custom_struct_data_via_string_transport() {
     let point = Point { x: 42, y: -7, label: "test".to_string() };
     let encoded = format!("{}:{}:{}", point.x, point.y, point.label);
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory).await.unwrap();
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory).await.unwrap();
     transport
         .send(ClientMessage::Request(Request {
             context: context::current(),
@@ -241,7 +241,7 @@ async fn custom_vec_data_via_string_transport() {
     let fory = make_transport_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     tokio::spawn(async move {
@@ -272,7 +272,7 @@ async fn custom_vec_data_via_string_transport() {
             .join(";")
     );
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory).await.unwrap();
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory).await.unwrap();
     transport
         .send(ClientMessage::Request(Request {
             context: context::current(),

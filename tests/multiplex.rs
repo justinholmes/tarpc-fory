@@ -41,7 +41,7 @@ async fn hundred_concurrent_calls_one_connection() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone())
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone())
             .await
             .unwrap();
     let addr = listener.local_addr();
@@ -99,7 +99,7 @@ async fn hundred_concurrent_calls_one_connection() {
 
     // Client: connect, send all N requests without waiting for replies, then
     // collect all N responses into a HashMap keyed by request_id.
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 

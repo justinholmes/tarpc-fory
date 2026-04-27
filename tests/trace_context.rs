@@ -38,7 +38,7 @@ async fn spawn_trace_echo_server(
     tokio::sync::oneshot::Receiver<(u128, u64, u8)>,
 ) {
     let mut listener: tarpc_fory::Incoming<u32, u32> =
-        tarpc_fory::listen("127.0.0.1:0", fory).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory).await.unwrap();
     let addr = listener.local_addr();
     let (tx, rx) = tokio::sync::oneshot::channel::<(u128, u64, u8)>();
 
@@ -74,7 +74,7 @@ async fn trace_context_sampled_preserves_ids() {
 
     let (addr, rx) = spawn_trace_echo_server(fory.clone()).await;
 
-    let mut transport = tarpc_fory::connect::<_, u32, u32>(addr, fory).await.unwrap();
+    let mut transport = tarpc_fory::connect_with_fory::<_, u32, u32>(addr, fory).await.unwrap();
 
     // context::Context is #[non_exhaustive]; start from current() and override
     // the trace_context field directly.
@@ -122,7 +122,7 @@ async fn trace_context_unsampled_preserves_ids() {
 
     let (addr, rx) = spawn_trace_echo_server(fory.clone()).await;
 
-    let mut transport = tarpc_fory::connect::<_, u32, u32>(addr, fory).await.unwrap();
+    let mut transport = tarpc_fory::connect_with_fory::<_, u32, u32>(addr, fory).await.unwrap();
 
     let mut ctx = context::current();
     ctx.trace_context = trace::Context {

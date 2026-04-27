@@ -46,7 +46,7 @@ async fn raw_string_round_trip_over_tarpc_fory() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone())
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone())
             .await
             .unwrap();
     let addr = listener.local_addr();
@@ -65,7 +65,7 @@ async fn raw_string_round_trip_over_tarpc_fory() {
     });
 
     // Client: connect, send request, receive response.
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 
@@ -93,7 +93,7 @@ async fn raw_string_multiple_round_trips_over_tarpc_fory() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone())
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone())
             .await
             .unwrap();
     let addr = listener.local_addr();
@@ -113,7 +113,7 @@ async fn raw_string_multiple_round_trips_over_tarpc_fory() {
         }
     });
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 

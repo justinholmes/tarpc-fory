@@ -24,7 +24,7 @@ async fn sixteen_mib_payload_round_trip() {
 
     // Server: echo Vec<u8> back as-is
     let mut listener: tarpc_fory::Incoming<Vec<u8>, Vec<u8>> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     let server = tokio::spawn(async move {
@@ -39,7 +39,7 @@ async fn sixteen_mib_payload_round_trip() {
     });
 
     // Client
-    let mut transport = tarpc_fory::connect::<_, Vec<u8>, Vec<u8>>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, Vec<u8>, Vec<u8>>(addr, fory)
         .await
         .unwrap();
 

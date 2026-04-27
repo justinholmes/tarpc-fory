@@ -35,7 +35,7 @@ async fn cancel_message_received_by_server() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     let trace_id_raw: u128 = 0xDEAD_BEEF_CAFE_0001_0002_0003_0004_0005_u128;
@@ -58,7 +58,7 @@ async fn cancel_message_received_by_server() {
         }
     });
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 
@@ -94,7 +94,7 @@ async fn request_then_cancel_full_sequence() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     // Channel to report the Cancel fields the server saw.
@@ -121,7 +121,7 @@ async fn request_then_cancel_full_sequence() {
         }
     });
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 

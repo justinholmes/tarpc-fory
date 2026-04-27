@@ -37,9 +37,11 @@
 //! See the [README](https://github.com/justinholmes/tarpc-fory) for the
 //! full guide including limitations.
 
-pub use tarpc::serde_transport::fory::{connect, listen, Incoming, ForyEnvelopeCodec};
+pub use tarpc::serde_transport::fory::{
+    connect, connect_with_fory, listen, listen_with_fory, Incoming, ForyEnvelopeCodec,
+};
 pub use tarpc::serde_transport::fory_envelope::{
-    ForyClientMessage, ForyRequest, ForyResponse, ForyServerError,
-    ForyResult, ForyTraceContext, register_envelope_types,
+    fory_wire_id, register_envelope_types, ForyClientMessage, ForyRequest, ForyResponse,
+    ForyResult, ForyServerError, ForyTraceContext, ServiceWireSchema,
 };
 pub use tokio_serde_fory::ForyCodec;

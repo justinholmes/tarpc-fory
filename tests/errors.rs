@@ -38,7 +38,7 @@ async fn server_returns_error(
     request_id_out: u64,
 ) -> std::net::SocketAddr {
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory).await.unwrap();
     let addr = listener.local_addr();
 
     tokio::spawn(async move {
@@ -62,7 +62,7 @@ async fn server_error_not_found_round_trip() {
     let fory = make_fory();
     let addr = server_returns_error(fory.clone(), io::ErrorKind::NotFound, "not found", 1).await;
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
     transport
@@ -92,7 +92,7 @@ async fn server_error_permission_denied_round_trip() {
     let addr =
         server_returns_error(fory.clone(), io::ErrorKind::PermissionDenied, "denied", 2).await;
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
     transport
@@ -122,7 +122,7 @@ async fn server_error_timed_out_round_trip() {
     let addr =
         server_returns_error(fory.clone(), io::ErrorKind::TimedOut, "deadline exceeded", 3).await;
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
     transport
@@ -152,7 +152,7 @@ async fn server_error_other_round_trip() {
     let addr =
         server_returns_error(fory.clone(), io::ErrorKind::Other, "something went wrong", 4).await;
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
     transport
@@ -182,7 +182,7 @@ async fn server_error_request_id_correlation() {
     let fory = make_fory();
 
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory.clone()).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory.clone()).await.unwrap();
     let addr = listener.local_addr();
 
     tokio::spawn(async move {
@@ -205,7 +205,7 @@ async fn server_error_request_id_correlation() {
         }
     });
 
-    let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+    let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
         .await
         .unwrap();
 

@@ -32,7 +32,7 @@ const NUM_CLIENTS: usize = 5;
 /// Accepts one connection, echoes all requests until the client disconnects.
 async fn run_echo_server(fory: Arc<Fory>) -> SocketAddr {
     let mut listener: tarpc_fory::Incoming<String, String> =
-        tarpc_fory::listen("127.0.0.1:0", fory).await.unwrap();
+        tarpc_fory::listen_with_fory("127.0.0.1:0", fory).await.unwrap();
     let addr = listener.local_addr();
 
     tokio::spawn(async move {
@@ -67,7 +67,7 @@ async fn five_clients_concurrent_no_cross_contamination() {
         .map(|i| {
             let fory = fory.clone();
             tokio::spawn(async move {
-                let mut transport = tarpc_fory::connect::<_, String, String>(addr, fory)
+                let mut transport = tarpc_fory::connect_with_fory::<_, String, String>(addr, fory)
                     .await
                     .unwrap();
 
