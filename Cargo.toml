@@ -1,0 +1,25 @@
+[package]
+name = "tarpc-fory"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Apache Fory transport for tarpc"
+repository = "https://github.com/justinholmes/tarpc-fory"
+readme = "README.md"
+keywords = ["tarpc", "fory", "rpc", "serialization"]
+categories = ["network-programming"]
+
+[dependencies]
+# Local path dep until upstream PR merges or fork is pushed publicly.
+# Once fork is pushed: switch to git = "https://github.com/justinholmes/tarpc.git", branch = "feat/fory-codec"
+# Once upstream merges: switch to crates.io version with serde-transport-fory feature.
+tarpc = { path = "../tarpc-fork/tarpc", features = ["serde-transport-fory", "tcp"] }
+tokio-serde-fory = { path = "../tokio-serde-fory" }
+fory = "0.17"
+fory-core = "0.17"
+tokio = { version = "1", features = ["net"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
