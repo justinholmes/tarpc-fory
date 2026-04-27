@@ -1,43 +1,38 @@
-//! Apache Fory transport for [tarpc](https://docs.rs/tarpc).
+//! Apache Fory binary transport for [`tarpc`](https://docs.rs/tarpc).
 //!
-//! Re-exports the `fory` codec module from `tarpc::serde_transport::fory`,
-//! plus the wrapper envelope types from `tarpc::serde_transport::fory_envelope`,
-//! so consumers can depend on a single stable crate name (`tarpc-fory`)
-//! without manually pinning a fork branch or flipping feature flags on tarpc
-//! directly.
+//! Re-exports the fory transport from `tarpc::serde_transport::fory` plus
+//! the wrapper envelope types from `tarpc::serde_transport::fory_envelope`,
+//! letting you depend on a single stable crate name without manually pinning
+//! a fork branch or flipping feature flags on tarpc directly.
 //!
-//! ## Status
+//! # Status
 //!
 //! Currently depends on a fork of `google/tarpc` while the upstream PR adding
 //! the `fory` feature is in flight. Once merged and released, `tarpc-fory`
-//! will repoint at the published `tarpc` version and you can drop this
-//! wrapper in favor of `tarpc = { features = ["serde-transport-fory"] }`.
+//! will repoint at the published `tarpc` version.
 //!
-//! ## Example
+//! # Quick start
 //!
 //! ```ignore
-//! use fory::{Fory, ForyObject};
+//! use fory::Fory;
 //! use std::sync::Arc;
-//! use tarpc::{client, context};
 //!
-//! #[tarpc::service]
-//! trait Hello {
-//!     async fn hello(name: String) -> String;
-//! }
-//!
-//! # async fn example() -> std::io::Result<()> {
 //! let mut fory = Fory::default();
-//! // Register HelloRequest, HelloResponse, and the fory wrapper envelope types.
+//! fory.register::<tarpc_fory::ForyTraceContext>(2).unwrap();
+//! fory.register::<tarpc_fory::ForyServerError>(3).unwrap();
+//! fory.register::<tarpc_fory::ForyResult<String>>(4).unwrap();
+//! fory.register::<tarpc_fory::ForyRequest<String>>(5).unwrap();
+//! fory.register::<tarpc_fory::ForyResponse<String>>(6).unwrap();
+//! fory.register::<tarpc_fory::ForyClientMessage<String>>(7).unwrap();
 //! let fory = Arc::new(fory);
 //!
-//! let transport = tarpc_fory::connect::<_, HelloRequest, HelloResponse>(
-//!     "127.0.0.1:8080",
-//!     fory,
-//! ).await?;
-//! let client = HelloClient::new(client::Config::default(), transport).spawn();
-//! let resp = client.hello(context::current(), "world".into()).await?;
+//! # async fn ex(addr: std::net::SocketAddr) -> std::io::Result<()> {
+//! let transport = tarpc_fory::connect::<_, String, String>(addr, fory).await?;
 //! # Ok(()) }
 //! ```
+//!
+//! See the [README](https://github.com/justinholmes/tarpc-fory) for the
+//! full guide including limitations.
 
 pub use tarpc::serde_transport::fory::{connect, listen, Incoming, ForyEnvelopeCodec};
 pub use tarpc::serde_transport::fory_envelope::{
