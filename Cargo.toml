@@ -17,8 +17,8 @@ tls = ["tcp", "dep:tokio-rustls"]
 [dependencies]
 # Upstream tarpc — no fork!
 tarpc = { version = "0.37", features = ["serde-transport", "serde1"] }
-tarpc-fory-macros = { path = "../tarpc-fory-macros" }
-tokio-serde-fory = { path = "../tokio-serde-fory" }
+tarpc-fory-macros = "0.1.1"
+tokio-serde-fory = "0.1"
 
 # Fory serialization
 fory = "0.17"
