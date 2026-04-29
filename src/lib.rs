@@ -42,6 +42,6 @@ pub use tarpc::serde_transport::fory::{
 };
 pub use tarpc::serde_transport::fory_envelope::{
     fory_wire_id, register_envelope_types, ForyClientMessage, ForyRequest, ForyResponse,
-    ForyResult, ForyServerError, ForyTraceContext, ServiceWireSchema,
+    ForyServerError, ForyTraceContext, ServiceWireSchema,
 };
 pub use tokio_serde_fory::ForyCodec;

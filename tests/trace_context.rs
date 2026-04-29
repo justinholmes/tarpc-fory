@@ -14,14 +14,13 @@ use std::sync::Arc;
 use std::time::Duration;
 use tarpc::{ClientMessage, Request, Response, context, trace};
 use tarpc_fory::{
-    ForyClientMessage, ForyRequest, ForyResponse, ForyResult, ForyServerError, ForyTraceContext,
+    ForyClientMessage, ForyRequest, ForyResponse, ForyServerError, ForyTraceContext,
 };
 
 fn make_fory() -> Arc<Fory> {
     let mut fory = Fory::default();
     fory.register_serializer::<ForyTraceContext>(2).unwrap();
     fory.register_serializer::<ForyServerError>(3).unwrap();
-    fory.register_serializer::<ForyResult<u32>>(4).unwrap();
     fory.register_serializer::<ForyRequest<u32>>(5).unwrap();
     fory.register_serializer::<ForyResponse<u32>>(6).unwrap();
     fory.register_serializer::<ForyClientMessage<u32>>(7).unwrap();
