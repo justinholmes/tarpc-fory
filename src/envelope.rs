@@ -590,10 +590,7 @@ impl From<&ServerError> for ForyServerError {
 
 impl From<ForyServerError> for ServerError {
     fn from(fse: ForyServerError) -> Self {
-        ServerError {
-            kind: u32_to_error_kind(fse.kind),
-            detail: fse.detail,
-        }
+        ServerError::new(u32_to_error_kind(fse.kind), fse.detail)
     }
 }
 
@@ -618,11 +615,13 @@ impl<T: Serializer + ForyDefault + Clone + 'static> From<&Request<T>> for ForyRe
 impl<T: Serializer + ForyDefault + 'static> From<ForyRequest<T>> for Request<T> {
     fn from(fr: ForyRequest<T>) -> Self {
         let deadline = Instant::now() + Duration::from_nanos(fr.deadline_ns);
+        // context::Context is #[non_exhaustive] so we cannot use a struct literal.
+        // Construct via functional update from Context::current(), then overwrite fields.
+        let mut ctx = context::Context::current();
+        ctx.deadline = deadline;
+        ctx.trace_context = trace::Context::from(fr.trace);
         Request {
-            context: context::Context {
-                deadline,
-                trace_context: trace::Context::from(fr.trace),
-            },
+            context: ctx,
             id: fr.id,
             message: fr.message,
         }
@@ -671,6 +670,12 @@ impl<T: Serializer + ForyDefault + Clone + 'static> From<&ClientMessage<T>>
             } => ForyClientMessage::Cancel {
                 trace: ForyTraceContext::from(trace_context),
                 request_id: *request_id,
+            },
+            // ClientMessage is #[non_exhaustive]; handle future variants by cancelling with
+            // a zero request_id so the server drops the unknown message harmlessly.
+            _ => ForyClientMessage::Cancel {
+                trace: ForyTraceContext { trace_id: 0, span_id: 0, sampling: 0 },
+                request_id: 0,
             },
         }
     }

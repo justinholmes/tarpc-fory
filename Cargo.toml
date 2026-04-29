@@ -9,17 +9,44 @@ readme = "README.md"
 keywords = ["tarpc", "fory", "rpc", "serialization"]
 categories = ["network-programming"]
 
+[features]
+default = ["tcp"]
+tcp = ["tarpc/tcp", "tokio/net"]
+tls = ["tcp", "dep:tokio-rustls"]
+
 [dependencies]
-# Local path dep until upstream PR merges or fork is pushed publicly.
-# Once fork is pushed: switch to git = "https://github.com/justinholmes/tarpc.git", branch = "feat/fory-codec"
-# Once upstream merges: switch to crates.io version with serde-transport-fory feature.
-tarpc = { path = "../tarpc-fork/tarpc", features = ["serde-transport-fory", "tcp"] }
+# Upstream tarpc — no fork!
+tarpc = { version = "0.37", features = ["serde-transport", "serde1"] }
+tarpc-fory-macros = { path = "../tarpc-fory-macros" }
 tokio-serde-fory = { path = "../tokio-serde-fory" }
+
+# Fory serialization
 fory = "0.17"
 fory-core = "0.17"
-tokio = { version = "1", features = ["net"] }
+
+# Async runtime + IO
+tokio = { version = "1", features = ["sync", "time"] }
 tokio-util = { version = "0.7", features = ["codec"] }
+tokio-serde = "0.9"
+
+# TLS (optional)
+tokio-rustls = { version = "0.26", optional = true }
+
+# Framing + streams
+futures = "0.3"
+pin-project = "1"
+bytes = "1"
+
+# serde (needed for Transport bounds)
+serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
+criterion = { version = "0.5", features = ["html_reports"] }
+rcgen = "0.13"
+
+# [[bench]]
+# name = "fory_codec_compare"
+# harness = false
+# Uncomment when benches/fory_codec_compare.rs is created (Task 9).
