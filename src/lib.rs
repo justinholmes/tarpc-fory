@@ -52,6 +52,7 @@ pub use zerocopy::{
     ClientZeroCopyCodec, ServerZeroCopyCodec, ToFrame, ZeroCopyIncoming,
     ZeroCopyServerTransport, ZeroCopySink, ZeroCopyTransport,
     connect_zerocopy, listen_zerocopy,
+    encode_frame, split_frame_body, MAX_FRAME_LEN,
 };
 
 // TLS zero-copy re-exports.
@@ -60,3 +61,18 @@ pub use zerocopy::{
     ZeroCopyTlsIncoming, ZeroCopyTlsServerTransport, ZeroCopyTlsTransport,
     connect_zerocopy_tls, listen_zerocopy_tls,
 };
+
+/// Streaming mode for a service method, as emitted by `#[fory_service]`.
+///
+/// Returned by `XxxService::streaming_methods()` for each method annotated
+/// with `#[streaming(server)]`, `#[streaming(client)]`, or
+/// `#[streaming(bidirectional)]`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StreamingMode {
+    /// Server sends a stream; client sends a single request.
+    Server,
+    /// Client sends a stream; server replies once.
+    Client,
+    /// Both sides stream concurrently.
+    Bidirectional,
+}

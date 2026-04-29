@@ -70,7 +70,7 @@ use tokio_util::bytes::{Bytes, BytesMut};
 use tokio_util::codec::{Encoder as _, Framed, LengthDelimitedCodec};
 
 // Maximum frame length: 64 MiB — matches cloudverve fabric framing.
-const MAX_FRAME_LEN: usize = 64 * 1024 * 1024;
+pub const MAX_FRAME_LEN: usize = 64 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
 // Server-side codec: decodes (ClientMessage<Req>, Option<Bytes>)
@@ -232,7 +232,7 @@ where
 /// The `body` `BytesMut` is obtained via `split_off`, which gives an owned
 /// `BytesMut` that shares the same underlying allocation as `frame`. Callers
 /// call `.freeze()` on it to get a `Bytes` that aliases the frame buffer.
-fn split_frame_body(frame: &mut BytesMut) -> Result<(BytesMut, Option<Bytes>), io::Error> {
+pub fn split_frame_body(frame: &mut BytesMut) -> Result<(BytesMut, Option<Bytes>), io::Error> {
     if frame.len() < 4 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
@@ -278,7 +278,7 @@ fn split_frame_body(frame: &mut BytesMut) -> Result<(BytesMut, Option<Bytes>), i
 ///
 /// This path is retained for the legacy Encoder impls used in `body_is_aliased`
 /// and the negative tests. The production send path goes through [`ZeroCopySink`].
-fn encode_frame(
+pub fn encode_frame(
     inner: &mut LengthDelimitedCodec,
     envelope: Bytes,
     body: Option<Bytes>,
