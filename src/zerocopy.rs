@@ -21,10 +21,10 @@
 //! practice), but the bulk payload is never copied in userspace.
 //!
 //! The canonical proof of receive-side zero-copy is
-//! `tarpc-fory/tests/zerocopy_internals.rs::body_is_aliased`.
+//! `tarpc-fory/tests/zerocopy_codec.rs::body_is_aliased`.
 //!
 //! The canonical proof of send-side zero-copy is
-//! `tarpc-fory/tests/zerocopy_internals.rs::sink_body_not_copied`.
+//! `tarpc-fory/tests/zerocopy_codec.rs::sink_body_not_copied`.
 //!
 //! # Wire format
 //!
