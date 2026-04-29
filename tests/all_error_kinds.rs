@@ -72,7 +72,7 @@ fn all_error_kinds_bijective_through_fory_encoding() {
 /// Verify the 18 documented u32 discriminants match the table exactly.
 #[test]
 fn error_kind_discriminants_match_table() {
-    use tarpc::serde_transport::fory_envelope::error_kind_to_u32;
+    use tarpc_fory::envelope::error_kind_to_u32;
 
     let table: &[(io::ErrorKind, u32)] = &[
         (io::ErrorKind::NotFound, 0),
@@ -109,7 +109,7 @@ fn error_kind_discriminants_match_table() {
 /// Unknown u32 values (>= 18) should decode as Other (the fallback).
 #[test]
 fn unknown_discriminant_decodes_as_other() {
-    use tarpc::serde_transport::fory_envelope::u32_to_error_kind;
+    use tarpc_fory::envelope::u32_to_error_kind;
 
     for unknown in [18u32, 99, 255, 1000] {
         let kind = u32_to_error_kind(unknown);

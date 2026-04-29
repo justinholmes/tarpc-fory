@@ -45,10 +45,14 @@ async fn spawn_trace_echo_server(
         if let Some(Ok(mut transport)) = listener.next().await {
             if let Some(Ok(ClientMessage::Request(req))) = transport.next().await {
                 let tc = &req.context.trace_context;
+                let sampling_byte = match tc.sampling_decision {
+                    trace::SamplingDecision::Sampled => 1u8,
+                    trace::SamplingDecision::Unsampled => 0u8,
+                };
                 let _ = tx.send((
                     u128::from(tc.trace_id),
                     u64::from(tc.span_id),
-                    u8::from(tc.sampling_decision),
+                    sampling_byte,
                 ));
                 // Echo back a trivial response so client doesn't stall.
                 let resp = Response {
